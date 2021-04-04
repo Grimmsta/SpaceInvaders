@@ -1,26 +1,31 @@
-- Player
+* = must have
+
+- Player*
 	-Shooting
 	-Health
+		-One shot, one kill
 	-Movement
+		-Only need to move left to right
 	-
 
-- Moveable enemies
+- Moveable enemies*
 	-Shooting
 	-Health
+		-One shot, one kill
 	-Movement
-	-
-
+		-Left to right
+		-Move down when the furthermost is at either end of the screen (Have a call to move down and switch direction)
 -Game loop
-	-Start game
-	-Game over
-	-Game won
+	-Start game*
+	-Game over*
+	-Game won*
 	-Enemy rounds
 	-
 
 -UI
-	-Player health
+	-Player health*
 	-Current round
-	-Score?
-	-
+	-Score*
+	-High Score
 	-
 	-
