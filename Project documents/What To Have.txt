@@ -1,0 +1,26 @@
+- Player
+	-Shooting
+	-Health
+	-Movement
+	-
+
+- Moveable enemies
+	-Shooting
+	-Health
+	-Movement
+	-
+
+-Game loop
+	-Start game
+	-Game over
+	-Game won
+	-Enemy rounds
+	-
+
+-UI
+	-Player health
+	-Current round
+	-Score?
+	-
+	-
+	-
