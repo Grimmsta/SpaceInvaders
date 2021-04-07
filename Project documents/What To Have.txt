@@ -2,19 +2,26 @@
 
 - Player*
 	-Shooting
+		-Player bullet can destroy enemy bullets
 	-Health
-		-One shot, one kill
+		-One shot, one HP gone
+		-3 HP
 	-Movement
 		-Only need to move left to right
-	-
 
-- Moveable enemies*
+- Enemies*
 	-Shooting
+		-Only the aliens at the bottom can shoot
+		-Long intervals between shots
+		-Only one can shoot at a time
+		-Random who fires
 	-Health
 		-One shot, one kill
 	-Movement
 		-Left to right
 		-Move down when the furthermost is at either end of the screen (Have a call to move down and switch direction)
+	-Special red enemy*
+
 -Game loop
 	-Start game*
 	-Game over*
@@ -24,8 +31,7 @@
 
 -UI
 	-Player health*
-	-Current round
 	-Score*
+	-Current roud
 	-High Score
-	-
 	-
