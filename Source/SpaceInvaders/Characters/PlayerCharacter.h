@@ -24,11 +24,23 @@ private:
 	void HandleMovement(float value);
 	void HandleFiring();
 
+	void SpawnProjectiles();
+
+	AProjectile* GetFreeProjectile();
+
 	UPROPERTY(VisibleDefaultsOnly, Category = Collision)
-		UStaticMeshComponent* MeshComponent;
+	UStaticMeshComponent* MeshComponent;
 
 	UPROPERTY(EditAnywhere, Category = Projectile)
 	TSubclassOf<AProjectile> ProjectileClass;
 
+	UPROPERTY(EditAnywhere, Category = Shooting)
+	float FireCooldown = .5f;
+
+	TArray<AProjectile*> ProjectileInstances;
+
 	FActorSpawnParameters SpawnParams;
+
+	float PreCachedProjectilesAmount = 50;
+	float FireCooldownLeft;
 };

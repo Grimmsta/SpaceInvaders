@@ -17,19 +17,31 @@
 		-Random who fires
 	-Health
 		-One shot, one kill
+		-When killed, tell manager that it is dead
 	-Movement
-		-Left to right
-		-Move down when the furthermost is at either end of the screen (Have a call to move down and switch direction)
-	-Special red enemy*
+		-Side to side
+		-Move down when the furthermost is at either end of the screen (Tell Manager that it hit a wall)		
 
--Game loop
+- Enemy Manager*
+	-Spawn in enemies
+		-Add enemy to list
+	-Keep track of all active enemies
+	-Call move on all enemies
+		-When a enemy makes the call, make sure it cant take another call right after (cooldown until it can be called again)
+		-Go through the list of active enemies to move down and switch direction
+
+- Projectiles*
+	-Travel in direction
+	-Explode when OnCollision
+	
+- Game loop
 	-Start game*
 	-Game over*
 	-Game won*
 	-Enemy rounds
 	-
 
--UI
+- UI
 	-Player health*
 	-Score*
 	-Current roud

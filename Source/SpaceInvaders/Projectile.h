@@ -6,16 +6,22 @@
 class UBoxComponent;
 
 UCLASS()
-class AProjectile :public AActor {
+class AProjectile : public AActor 
+{
 	GENERATED_BODY()
 
 public:
 	AProjectile();
-	
+
 	virtual void Tick(float DeltaTime) override;
-	
+
 	void MoveProjectile(const FVector& InStartLocation, const FVector& InStartDirection);
 	void Explode();
+
+	void SetProjectileFree();
+	void SetProjectileVisibility(bool bVisible);
+
+	bool IsFree();
 
 protected:
 	virtual void BeginPlay() override;
@@ -23,20 +29,21 @@ protected:
 private:
 
 	UPROPERTY(EditAnywhere, Category = Collision)
-	UStaticMeshComponent* MeshComponent;
-	
+		UStaticMeshComponent* MeshComponent;
+
 	UPROPERTY(EditAnywhere, Category = Collision)
-	UBoxComponent* BoxCollider;
+		UBoxComponent* BoxCollider;
 
 	UPROPERTY(EditAnywhere, Category = Projectile)
-	float Speed = 10.f;
-	
+		float ProjectileSpeed = 1000.f;
+
 	UPROPERTY(EditAnywhere, Category = Projectile)
-	float LifeTime = 5.f;
+		float LifeTime = 5.f;
 
 	FVector StartLocation = FVector::ZeroVector;
-	FVector StartDirection = FVector::ZeroVector; 
+	FVector StartDirection = FVector::ZeroVector;
 
+	float LifeTimeLeft = 0.f;
 	float DistanceMoved = 0.f;
-	float ProjectileSpeed = 10.f;
+	bool bIsFree = true; 
 };
