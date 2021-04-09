@@ -17,6 +17,11 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
+	void RemoveHealthPoint();
+
+	UFUNCTION(BlueprintImplementableEvent)
+		void BP_UpdateHealthPoints();
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -26,16 +31,21 @@ private:
 
 	void SpawnProjectiles();
 
+
+
 	AProjectile* GetFreeProjectile();
 
 	UPROPERTY(VisibleDefaultsOnly, Category = Collision)
-	UStaticMeshComponent* MeshComponent;
+		UStaticMeshComponent* MeshComponent;
 
 	UPROPERTY(EditAnywhere, Category = Projectile)
-	TSubclassOf<AProjectile> ProjectileClass;
+		TSubclassOf<AProjectile> ProjectileClass;
+
+	UPROPERTY(EditAnywhere, Category = Health)
+		int HP = 3;
 
 	UPROPERTY(EditAnywhere, Category = Shooting)
-	float FireCooldown = .5f;
+		float FireCooldown = .5f;
 
 	TArray<AProjectile*> ProjectileInstances;
 

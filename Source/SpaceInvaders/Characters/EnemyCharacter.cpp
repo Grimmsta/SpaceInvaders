@@ -13,6 +13,11 @@ AEnemyCharacter::AEnemyCharacter()
 	MeshComponent->SetupAttachment(BoxCollider);
 }
 
+void AEnemyCharacter::DestroyEnemy()
+{
+	RootComponent->SetVisibility(false, true);
+}
+
 void AEnemyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -56,5 +61,5 @@ void AEnemyCharacter::Shoot()
 {
 	AProjectile* Projectile = GetWorld()->SpawnActor<AProjectile>(ProjectileClass, GetActorLocation(), GetActorRotation(), SpawnParams);
 
-	Projectile->MoveProjectile(GetActorLocation(), -FVector::UpVector);
+	Projectile->MoveProjectile(GetActorLocation() - FVector::UpVector * 100.f, -FVector::UpVector);
 }

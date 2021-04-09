@@ -2,6 +2,8 @@
 #include "GameFramework/Actor.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/BoxComponent.h"
+#include "Characters/PlayerCharacter.h"
+#include "Characters/EnemyCharacter.h"
 
 AProjectile::AProjectile()
 {
@@ -20,8 +22,10 @@ void AProjectile::BeginPlay()
 {
 	Super::BeginPlay();
 
-	SetProjectileVisibility(false);
+	BoxCollider->OnComponentBeginOverlap.AddDynamic(this, &AProjectile::OverlapBegin);
 	BoxCollider->SetCollisionProfileName(TEXT("NoCollision"));
+
+	SetProjectileVisibility(false);
 }
 
 void AProjectile::Tick(float DeltaTime)
@@ -42,11 +46,12 @@ void AProjectile::Tick(float DeltaTime)
 	SetActorLocation(NewLocation);
 }
 
-void AProjectile::MoveProjectile(const FVector& InStartLocation, const FVector& InStartDirection)
+void AProjectile::MoveProjectile(const FVector& InStartLocation, const FVector& InStartDirection, Target InProjectileTarget)
 {
 	bIsFree = false;
 	StartLocation = InStartLocation;
 	StartDirection = InStartDirection;
+	ProjectileTarget = InProjectileTarget;
 	LifeTimeLeft = LifeTime;
 	DistanceMoved = 0.f;
 	SetActorLocation(StartLocation);
@@ -68,6 +73,28 @@ void AProjectile::SetProjectileVisibility(bool bVisible)
 	RootComponent->SetVisibility(bVisible, true);
 }
 
+void AProjectile::OverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (APlayerCharacter* Player = Cast<APlayerCharacter>(OtherActor))
+	{
+		if (Player != GetOwner())
+		{
+			SetProjectileFree();
+
+			Player->RemoveHealthPoint();
+		}
+	}
+	else if (AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(OtherActor))
+	{
+		if (Enemy != GetOwner())
+		{
+			SetProjectileFree();
+
+			Enemy->DestroyEnemy();
+		}
+	}
+}
+
 bool AProjectile::IsFree()
 {
 	return bIsFree;
@@ -77,4 +104,4 @@ bool AProjectile::IsFree()
 	//Ignore owner	
 	//if hit Player, remove one life
 	//if hit enemy, destroy enemy
-	//if hit bullet, MakeFree
+	//if hit bullet, MakeFree 

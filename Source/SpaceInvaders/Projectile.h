@@ -5,6 +5,12 @@
 
 class UBoxComponent;
 
+UENUM()
+enum class Target {
+	PLAYER,
+	ENEMY
+};
+
 UCLASS()
 class AProjectile : public AActor 
 {
@@ -15,11 +21,14 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 
-	void MoveProjectile(const FVector& InStartLocation, const FVector& InStartDirection);
+	void MoveProjectile(const FVector& InStartLocation, const FVector& InStartDirection, Target InProjectileTarget);
 	void Explode();
 
 	void SetProjectileFree();
 	void SetProjectileVisibility(bool bVisible);
+
+	UFUNCTION()
+	void OverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	bool IsFree();
 
@@ -43,7 +52,10 @@ private:
 	FVector StartLocation = FVector::ZeroVector;
 	FVector StartDirection = FVector::ZeroVector;
 
+
 	float LifeTimeLeft = 0.f;
 	float DistanceMoved = 0.f;
 	bool bIsFree = true; 
+
+	Target ProjectileTarget;
 };

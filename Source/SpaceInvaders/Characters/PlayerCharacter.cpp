@@ -63,7 +63,7 @@ void APlayerCharacter::HandleFiring()
 		return;
 	}
 
-	Projectile->MoveProjectile(GetActorLocation() + FVector::UpVector * 50.f, FVector::UpVector);
+	Projectile->MoveProjectile(GetActorLocation() + FVector::UpVector * 100.f, FVector::UpVector);
 
 	FireCooldownLeft = FireCooldown;
 }
@@ -74,6 +74,18 @@ void APlayerCharacter::SpawnProjectiles()
 	{
 		AProjectile* NewProjectile = GetWorld()->SpawnActor<AProjectile>(ProjectileClass, GetActorLocation(), GetActorRotation(), SpawnParams);
 		ProjectileInstances.Add(NewProjectile);
+	}
+}
+
+void APlayerCharacter::RemoveHealthPoint()
+{
+	HP--;
+	
+	BP_UpdateHealthPoints();
+
+	if (HP <=0)
+	{
+		//GameOver
 	}
 }
 

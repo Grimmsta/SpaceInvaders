@@ -15,13 +15,13 @@ class AEnemyCharacter : public APawn
 public:
 	AEnemyCharacter();
 	
+	void DestroyEnemy();
+
 protected:
 	virtual void BeginPlay() override;
 
 private:
 	virtual void Tick(float DeltaTime) override;
-
-	void DestroyEnemy();
 
 	void Shoot();
 
