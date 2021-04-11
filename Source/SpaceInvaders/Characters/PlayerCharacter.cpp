@@ -4,7 +4,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "../Projectile.h"
-#include "Containers/Array.h"
+#include "EnemyCharacter.h"
 
 APlayerCharacter::APlayerCharacter()
 {
@@ -12,6 +12,11 @@ APlayerCharacter::APlayerCharacter()
 
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	MeshComponent->SetupAttachment(RootComponent);
+}
+
+void APlayerCharacter::RecieveEnemyKilled(float EnemyScoreValue)
+{
+	BP_UpdateScore(EnemyScoreValue);
 }
 
 void APlayerCharacter::BeginPlay()
@@ -63,7 +68,7 @@ void APlayerCharacter::HandleFiring()
 		return;
 	}
 
-	Projectile->MoveProjectile(GetActorLocation() + FVector::UpVector * 100.f, FVector::UpVector);
+	Projectile->MoveProjectile(GetActorLocation() + FVector::UpVector * 100.f, FVector::UpVector, Target::ENEMY);
 
 	FireCooldownLeft = FireCooldown;
 }

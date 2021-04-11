@@ -6,6 +6,7 @@
 class UStaticMeshComponent;
 class UBoxComponent;
 class AProjectile;
+class APlayerCharacter;
 
 UCLASS()
 class AEnemyCharacter : public APawn 
@@ -39,9 +40,11 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = Movement)
 	float MovementSpeed = 1000;
+	
+	UPROPERTY(EditAnywhere, Category = Enemy)
+	float EnemyScoreValue = 100;	
 
 	float ShootIntervalLeft = 0;
-	float DistanceMoved = 0;
 
 	FActorSpawnParameters SpawnParams;
 

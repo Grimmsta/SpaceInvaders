@@ -1,7 +1,10 @@
 #include "EnemyCharacter.h"
 #include "Components/BoxComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "GameFramework/Character.h"
+#include "PlayerCharacter.h"
 #include "../Projectile.h"
+#include <Kismet/GameplayStatics.h>
 
 AEnemyCharacter::AEnemyCharacter() 
 {
@@ -13,14 +16,10 @@ AEnemyCharacter::AEnemyCharacter()
 	MeshComponent->SetupAttachment(BoxCollider);
 }
 
-void AEnemyCharacter::DestroyEnemy()
-{
-	RootComponent->SetVisibility(false, true);
-}
-
 void AEnemyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
 
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 	SpawnParams.ObjectFlags = RF_Transient;
@@ -57,9 +56,22 @@ void AEnemyCharacter::Tick(float DeltaTime)
 		//Shoot random 
 }
 
+void AEnemyCharacter::DestroyEnemy()
+{
+	RootComponent->SetVisibility(false, true);
+	SetActorTickEnabled(false);
+
+	ACharacter* PlayerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+
+	if (APlayerCharacter* Character = Cast<APlayerCharacter>(PlayerCharacter))
+	{
+		Character->RecieveEnemyKilled(EnemyScoreValue);
+	}
+}
+
 void AEnemyCharacter::Shoot()
 {
 	AProjectile* Projectile = GetWorld()->SpawnActor<AProjectile>(ProjectileClass, GetActorLocation(), GetActorRotation(), SpawnParams);
 
-	Projectile->MoveProjectile(GetActorLocation() - FVector::UpVector * 100.f, -FVector::UpVector);
+	Projectile->MoveProjectile(GetActorLocation() - FVector::UpVector * 100.f, -FVector::UpVector, Target::PLAYER);
 }
