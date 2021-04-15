@@ -4,6 +4,7 @@
 #include "Projectile.generated.h"
 
 class UBoxComponent;
+class UParticleEmitter;
 
 UENUM()
 enum class Target {
@@ -22,7 +23,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	void MoveProjectile(const FVector& InStartLocation, const FVector& InStartDirection, Target InProjectileTarget);
-	void Explode();
+	void Explode(const FVector& ExplodeLocation);
 
 	void SetProjectileFree();
 	void SetProjectileVisibility(bool bVisible);
@@ -36,26 +37,27 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
+	UPROPERTY(EditAnywhere, Category = Collision)
+	UStaticMeshComponent* MeshComponent;
 
 	UPROPERTY(EditAnywhere, Category = Collision)
-		UStaticMeshComponent* MeshComponent;
-
+	UBoxComponent* BoxCollider;
+		
 	UPROPERTY(EditAnywhere, Category = Collision)
-		UBoxComponent* BoxCollider;
+	UParticleSystem* Explosion;
 
 	UPROPERTY(EditAnywhere, Category = Projectile)
-		float ProjectileSpeed = 1000.f;
+	 float ProjectileSpeed = 1000.f;
 
 	UPROPERTY(EditAnywhere, Category = Projectile)
-		float LifeTime = 5.f;
+	 float LifeTime = 5.f;
 
-	FVector StartLocation = FVector::ZeroVector;
 	FVector StartDirection = FVector::ZeroVector;
-
+	FVector StartLocation = FVector::ZeroVector;
 
 	float LifeTimeLeft = 0.f;
 	float DistanceMoved = 0.f;
 	bool bIsFree = true; 
 
-	Target ProjectileTarget;
+	Target TargetToDestroy;
 };

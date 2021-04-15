@@ -2,6 +2,7 @@
 #include "GameFramework/Actor.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/BoxComponent.h"
+#include "Kismet/GameplayStatics.h"	
 #include "Characters/PlayerCharacter.h"
 #include "Characters/EnemyCharacter.h"
 
@@ -9,6 +10,8 @@ AProjectile::AProjectile()
 {
 	PrimaryActorTick.bStartWithTickEnabled = false;
 	PrimaryActorTick.bCanEverTick = true;
+
+	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
 
 	BoxCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("Box Collider"));
 	BoxCollider->SetupAttachment(RootComponent);
@@ -51,7 +54,7 @@ void AProjectile::MoveProjectile(const FVector& InStartLocation, const FVector& 
 	bIsFree = false;
 	StartLocation = InStartLocation;
 	StartDirection = InStartDirection;
-	ProjectileTarget = InProjectileTarget;
+	TargetToDestroy = InProjectileTarget;
 	LifeTimeLeft = LifeTime;
 	DistanceMoved = 0.f;
 	SetActorLocation(StartLocation);
@@ -77,21 +80,34 @@ void AProjectile::OverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor*
 {
 	if (APlayerCharacter* Player = Cast<APlayerCharacter>(OtherActor))
 	{
-		if (Player != GetOwner())
+		if (TargetToDestroy == Target::PLAYER)
 		{
 			SetProjectileFree();
-
+			Explode(GetActorLocation());
 			Player->RemoveHealthPoint();
 		}
 	}
 	else if (AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(OtherActor))
 	{
-		if (Enemy != GetOwner())
+		if (TargetToDestroy == Target::ENEMY)
 		{
 			SetProjectileFree();
-
+			Explode(Enemy->GetActorLocation());
 			Enemy->DestroyEnemy();
 		}
+	}
+	else
+	{
+		Explode(GetActorLocation());
+		SetProjectileFree();
+	}
+}
+
+void AProjectile::Explode(const FVector& ExplodeLocation)
+{
+	if (Explosion)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), Explosion, ExplodeLocation, GetActorRotation(), true);
 	}
 }
 
@@ -99,9 +115,3 @@ bool AProjectile::IsFree()
 {
 	return bIsFree;
 }
-
-//OnCollision
-	//Ignore owner	
-	//if hit Player, remove one life
-	//if hit enemy, destroy enemy
-	//if hit bullet, MakeFree 

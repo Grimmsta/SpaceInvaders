@@ -1,14 +1,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Character.h"
+#include "GameFramework/Pawn.h"
 #include "PlayerCharacter.generated.h"
 
 class AProjectile;
 class AEnemyCharacter;
+class UBoxComponent;
 
 UCLASS()
-class APlayerCharacter : public ACharacter
+class APlayerCharacter : public APawn
 {
 	GENERATED_BODY()
 
@@ -20,16 +21,26 @@ public:
 
 	void RemoveHealthPoint();
 
+	void RecieveEnemyKilled(float EnemyScoreValue);
+
+	void RecieveGameWon();
+	
+	void GameOver();
+
 	UFUNCTION(BlueprintImplementableEvent)
 	void BP_UpdateHealthPoints();	
 	
 	UFUNCTION(BlueprintImplementableEvent)
 	void BP_UpdateScore(float ScoreToAdd);
+	
+	UFUNCTION(BlueprintImplementableEvent)
+	void BP_GameOver();
+	
+	UFUNCTION(BlueprintImplementableEvent)
+	void BP_GameWon();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Health)
 		int HP = 3;
-
-	void RecieveEnemyKilled(float EnemyScoreValue);
 
 protected:
 	virtual void BeginPlay() override;
@@ -37,24 +48,37 @@ protected:
 private:
 	void HandleMovement(float value);
 	void HandleFiring();
+	void HandleExitGame();
 
-	void SpawnProjectiles();
+	void SpawnProjectile();
 
 	AProjectile* GetFreeProjectile();
 
 	UPROPERTY(VisibleDefaultsOnly, Category = Collision)
-		UStaticMeshComponent* MeshComponent;
-
-	UPROPERTY(EditAnywhere, Category = Projectile)
-		TSubclassOf<AProjectile> ProjectileClass;
+	UStaticMeshComponent* MeshComponent;
+		
+	UPROPERTY(VisibleDefaultsOnly, Category = Collision)
+	UBoxComponent* BoxCollider;
 
 	UPROPERTY(EditAnywhere, Category = Shooting)
-		float FireCooldown = .5f;
+	TSubclassOf<AProjectile> ProjectileClass;
+
+	UPROPERTY(EditAnywhere, Category = Shooting)
+	float FireCooldown = .5f;
+
+	UPROPERTY(EditAnywhere, Category = Shooting)
+	float ProjectileSpawnOffset = 50.f;
+
+	UPROPERTY(EditAnywhere, Category = Movement)
+	float MovementSpeed = 100;
+
+	float CurrentDirection = 0;
 
 	TArray<AProjectile*> ProjectileInstances;
 
 	FActorSpawnParameters SpawnParams;
 
-	float PreCachedProjectilesAmount = 50;
-	float FireCooldownLeft;
+	APlayerController* MyPlayerController;
+
+	float FireCooldownRemaining;
 };

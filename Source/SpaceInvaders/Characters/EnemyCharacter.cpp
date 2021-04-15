@@ -1,14 +1,15 @@
 #include "EnemyCharacter.h"
 #include "Components/BoxComponent.h"
 #include "Components/StaticMeshComponent.h"
-#include "GameFramework/Character.h"
 #include "PlayerCharacter.h"
 #include "../Projectile.h"
-#include <Kismet/GameplayStatics.h>
+#include "../EnemyManager.h"
 
-AEnemyCharacter::AEnemyCharacter() 
+AEnemyCharacter::AEnemyCharacter()
 {
 	//Add mesh and collider
+	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
+
 	BoxCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("Box Collider"));
 	BoxCollider->SetupAttachment(RootComponent);
 
@@ -20,58 +21,62 @@ void AEnemyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 	SpawnParams.ObjectFlags = RF_Transient;
-	SpawnParams.Instigator = this;
 	SpawnParams.Owner = this;
 
-	ShootIntervalLeft = ShootInterval;
+	AActor* SpawningActor = GetOwner();
+	EnemyManager = Cast<AEnemyManager>(SpawningActor);
 }
 
 void AEnemyCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	//Todo: have a cooldown on the move, only move x units every y seconds
+	//Line Trace to find blocking walls
+	FHitResult HitResult;
 
-	ShootIntervalLeft -= DeltaTime;
+	GetWorld()->LineTraceSingleByChannel(HitResult, GetActorLocation(), GetActorLocation() + CurrentDirection * 10.f, ECC_WorldStatic);
 
-	if (ShootIntervalLeft < 0)
+	if (HitResult.bBlockingHit)
 	{
-		Shoot();
-		ShootIntervalLeft = ShootInterval;
-		//Move these to another function, like when it collides with a wall
-		CurrentDirection = -CurrentDirection; //Change direction
-		SetActorLocation(GetActorLocation() - FVector::UpVector*10); //Move the enemy down
+		EnemyManager->CallChangeDirection();
 	}
 
-	FVector NewLocation = GetActorLocation() + CurrentDirection * (MovementSpeed * DeltaTime); //Move the enemy side to side
 
-	SetActorLocation(NewLocation);
+	//Move Enemy character
+	MoveIntervalLeft -= DeltaTime;
 
-	//Move target down
-	//Check if we collided with wall/blocking volume
-		//When we do, move down and change direction
-		//Shoot random 
+	if (MoveIntervalLeft < 0)
+	{
+		MoveIntervalLeft = MoveInterval;
+
+		FVector NewLocation = GetActorLocation() + CurrentDirection * MovementSpeed; //Move the enemy side to side
+
+		SetActorLocation(NewLocation);
+	}
 }
 
 void AEnemyCharacter::DestroyEnemy()
 {
-	RootComponent->SetVisibility(false, true);
-	SetActorTickEnabled(false);
+	EnemyManager->GetPlayerCharacter()->RecieveEnemyKilled(EnemyScoreValue);
+	EnemyManager->RemoveEnemyFromActiveEnemies(this);
 
-	ACharacter* PlayerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
-
-	if (APlayerCharacter* Character = Cast<APlayerCharacter>(PlayerCharacter))
-	{
-		Character->RecieveEnemyKilled(EnemyScoreValue);
-	}
+	this->Destroy(true);
 }
 
-void AEnemyCharacter::Shoot()
+void AEnemyCharacter::MoveDownAndChangeDirection()
 {
-	AProjectile* Projectile = GetWorld()->SpawnActor<AProjectile>(ProjectileClass, GetActorLocation(), GetActorRotation(), SpawnParams);
+	CurrentDirection = -CurrentDirection;
+	SetActorLocation(GetActorLocation() - FVector::UpVector * MoveDownUnits);
+}
 
-	Projectile->MoveProjectile(GetActorLocation() - FVector::UpVector * 100.f, -FVector::UpVector, Target::PLAYER);
+void AEnemyCharacter::Shoot(AProjectile* ProjectileToShoot)
+{
+	ProjectileToShoot->MoveProjectile(GetActorLocation() - FVector::UpVector * ProjectileSpawnOffset, -FVector::UpVector, Target::PLAYER);
+}
+
+void AEnemyCharacter::HasReachedBottom()
+{
+	EnemyManager->GetPlayerCharacter()->GameOver();
 }

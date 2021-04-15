@@ -3,39 +3,61 @@
 #include "GameFramework/Controller.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/BoxComponent.h"
 #include "../Projectile.h"
 #include "EnemyCharacter.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 APlayerCharacter::APlayerCharacter()
 {
-	GetCharacterMovement()->bOrientRotationToMovement = false;
+	PrimaryActorTick.bCanEverTick = true;
+	AutoPossessPlayer = EAutoReceiveInput::Player0;
+	
+	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
+
+	BoxCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollider"));
+	BoxCollider->SetupAttachment(RootComponent);
 
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
-	MeshComponent->SetupAttachment(RootComponent);
-}
+	MeshComponent->SetupAttachment(BoxCollider);
 
-void APlayerCharacter::RecieveEnemyKilled(float EnemyScoreValue)
-{
-	BP_UpdateScore(EnemyScoreValue);
 }
 
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	SpawnProjectiles();
-
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 	SpawnParams.ObjectFlags = RF_Transient;
-	SpawnParams.Instigator = this;
 	SpawnParams.Owner = this;
+
+	MyPlayerController = GetWorld()->GetFirstPlayerController();
+	MyPlayerController->bShowMouseCursor = false;
+
+	SpawnProjectile();
 }
 
 void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	FireCooldownLeft -= DeltaTime;
+	//Trace for blocking walls
+	FHitResult HitResult;
+
+	FVector CurrentMovingDirection = FVector::RightVector * CurrentDirection;
+	GetWorld()->LineTraceSingleByChannel(HitResult, GetActorLocation(), GetActorLocation() + CurrentMovingDirection * 50.f, ECC_WorldStatic);
+
+	if (HitResult.GetActor() != this && HitResult.bBlockingHit)
+	{
+		CurrentDirection = 0;
+	}
+
+	//Move player
+	FVector NewLocation = GetActorLocation() + FVector::RightVector * CurrentDirection * MovementSpeed * DeltaTime;
+
+	SetActorLocation(NewLocation);
+
+	FireCooldownRemaining -= DeltaTime;
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -44,19 +66,17 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 	PlayerInputComponent->BindAxis(TEXT("Strafe"), this, &APlayerCharacter::HandleMovement);
 	PlayerInputComponent->BindAction(TEXT("Fire"), IE_Pressed, this, &APlayerCharacter::HandleFiring);
+	PlayerInputComponent->BindAction(TEXT("QuitGame"), IE_Released, this, &APlayerCharacter::HandleExitGame);
 }
 
 void APlayerCharacter::HandleMovement(float Value)
 {
-	if ((Controller != nullptr) && (Value != 0.0f))
-	{
-		AddMovementInput(FVector(0, 1, 0), Value);
-	}
+	CurrentDirection = Value;
 }
 
 void APlayerCharacter::HandleFiring()
 {
-	if (FireCooldownLeft > 0)
+	if (FireCooldownRemaining > 0)
 	{
 		return;
 	}
@@ -65,32 +85,58 @@ void APlayerCharacter::HandleFiring()
 
 	if (Projectile == nullptr)
 	{
-		return;
+		SpawnProjectile();
+
+		Projectile = GetFreeProjectile();
 	}
 
-	Projectile->MoveProjectile(GetActorLocation() + FVector::UpVector * 100.f, FVector::UpVector, Target::ENEMY);
+	Projectile->MoveProjectile(GetActorLocation() + FVector::UpVector * ProjectileSpawnOffset, FVector::UpVector, Target::ENEMY);
 
-	FireCooldownLeft = FireCooldown;
+	FireCooldownRemaining = FireCooldown;
 }
 
-void APlayerCharacter::SpawnProjectiles()
+void APlayerCharacter::HandleExitGame()
 {
-	for (int i = 0; i < 20; i++)
-	{
-		AProjectile* NewProjectile = GetWorld()->SpawnActor<AProjectile>(ProjectileClass, GetActorLocation(), GetActorRotation(), SpawnParams);
-		ProjectileInstances.Add(NewProjectile);
-	}
+	UKismetSystemLibrary::QuitGame(GetWorld(),nullptr, EQuitPreference::Quit, false);
+}
+
+void APlayerCharacter::RecieveEnemyKilled(float EnemyScoreValue)
+{
+	BP_UpdateScore(EnemyScoreValue);
+}
+
+void APlayerCharacter::RecieveGameWon()
+{
+	MyPlayerController->bShowMouseCursor = true;
+	MyPlayerController->bEnableMouseOverEvents = true;
+	MyPlayerController->bEnableClickEvents = true;
+	BP_GameWon();
+}
+
+void APlayerCharacter::GameOver()
+{
+	BP_GameOver();
+	MyPlayerController->bShowMouseCursor = true;
+	MyPlayerController->bEnableMouseOverEvents = true;
+	MyPlayerController->bEnableClickEvents = true;
+	SetActorTickEnabled(false);
+}
+
+void APlayerCharacter::SpawnProjectile()
+{
+	AProjectile* NewProjectile = GetWorld()->SpawnActor<AProjectile>(ProjectileClass, GetActorLocation(), GetActorRotation(), SpawnParams);
+	ProjectileInstances.Add(NewProjectile);
 }
 
 void APlayerCharacter::RemoveHealthPoint()
 {
 	HP--;
-	
+
 	BP_UpdateHealthPoints();
 
-	if (HP <=0)
+	if (HP <= 0)
 	{
-		//GameOver
+		GameOver();
 	}
 }
 
